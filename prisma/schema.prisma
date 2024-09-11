@@ -1,0 +1,45 @@
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userID  String  @id @default(cuid()) // 기본 키로 userID 사용
+  password String
+  charas   Chara[]
+}
+
+model Chara {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  health    Int        @default(500)
+  power     Int        @default(100)
+  money     Int        @default(10000)
+  userID    String
+  user      User       @relation(fields: [userID], references: [userID]) // userID를 참조
+  items     Item[]     // 캐릭터가 소유한 아이템들
+  inventory Inventory? // 캐릭터가 소유한 인벤토리 (1:1 관계)
+}
+
+model Item {
+  id          Int        @id @default(autoincrement()) // 아이템 번호 (기본 키)
+  name        String     // 아이템 이름
+  stat        Json       // 아이템 스탯 (JSON 형태로 저장)
+  price       Int        // 아이템 가격
+  charaID     Int?       // 아이템이 속한 캐릭터의 ID (선택적)
+  chara       Chara?     @relation(fields: [charaID], references: [id]) // 캐릭터와의 관계 설정 (선택적)
+  inventoryID Int?       // 아이템이 속한 인벤토리의 ID (선택적)
+  inventory   Inventory? @relation(fields: [inventoryID], references: [id]) // 인벤토리와의 관계 설정 (선택적)
+}
+
+model Inventory {
+  id        Int      @id @default(autoincrement())  // 인벤토리 번호 (기본 키)
+  charaID   Int      @unique                       // 인벤토리 소유 캐릭터의 ID (1:1 관계)
+  chara     Chara    @relation(fields: [charaID], references: [id]) // 캐릭터와의 관계 설정
+  items     Item[]   // 인벤토리에 있는 아이템들
+}
